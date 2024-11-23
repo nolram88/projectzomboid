@@ -1,0 +1,33 @@
+# Default values for PZ server
+image:
+  repository: steamcmd/steamcmd
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serverConfig:
+  name: "My PZ Server"
+  description: "A Project Zomboid Dedicated Server"
+  adminPassword: "changeme"  # You should override this
+  serverPassword: ""  # Optional server password
+  maxPlayers: 16
+  publicServer: true
+  modIds: []  # List of Workshop mod IDs
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 10Gi
+
+service:
+  type: LoadBalancer
+  port: 16261
+  queryPort: 16262
+  rconPort: 27015
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi

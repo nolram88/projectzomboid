@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pz-server
+description: A Helm chart for Project Zomboid Dedicated Server
+type: application
+version: 0.1.0
+appVersion: "41.78.16"

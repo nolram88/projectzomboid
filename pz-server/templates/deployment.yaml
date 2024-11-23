@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pz-server.fullname" . }}
+  labels:
+    {{- include "pz-server.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "pz-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "pz-server.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash"]
+          args:
+            - "-c"
+            - |
+              steamcmd +force_install_dir /pz-server +login anonymous +app_update 380870 validate +quit && \
+              cd /pz-server && \
+              ./start-server.sh \
+              -servername "{{ .Values.serverConfig.name }}" \
+              -adminpassword "{{ .Values.serverConfig.adminPassword }}" \
+              {{- if .Values.serverConfig.serverPassword }}
+              -password "{{ .Values.serverConfig.serverPassword }}" \
+              {{- end }}
+              -maxplayers {{ .Values.serverConfig.maxPlayers }} \
+              {{- if .Values.serverConfig.publicServer }}
+              -public \
+              {{- end }}
+              {{- if .Values.serverConfig.modIds }}
+              -workshop {{ join ";" .Values.serverConfig.modIds }} \
+              {{- end }}
+          ports:
+            - name: game
+              containerPort: 16261
+              protocol: UDP
+            - name: query
+              containerPort: 16262
+              protocol: UDP
+            - name: rcon
+              containerPort: 27015
+              protocol: TCP
+          volumeMounts:
+            - name: pz-data
+              mountPath: /pz-server
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: pz-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "pz-server.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
